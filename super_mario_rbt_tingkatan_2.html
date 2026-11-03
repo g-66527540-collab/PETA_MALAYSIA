@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>SUPER MARIO: MISI PENYELAMAT DUNIA MEKANIKAL RBT TINGKATAN 2</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Fredoka+One&family=Outfit:wght@400;600;800&display=swap');
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+      overflow: hidden;
+      background-color: #0f172a;
+      touch-action: manipulation;
+    }
+
+    .font-pixel {
+      font-family: 'Press Start 2P', cursive;
+    }
+
+    .font-fun {
+      font-family: 'Fredoka One', cursive;
+    }
+
+    /* Custom Canvas Styling */
+    #gameCanvas {
+      background: linear-gradient(to bottom, #60a5fa, #bfdbfe);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+      border-radius: 12px;
+    }
+
+    /* Modal Animation */
+    .modal-enter {
+      animation: modalIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(0.8) translateY(20px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    /* Pixelated retro style buttons */
+    .btn-retro {
+      box-shadow: 0 6px 0 0 rgba(0,0,0,0.4);
+      transition: all 0.1s ease;
+    }
+    .btn-retro:active {
+      transform: translateY(4px);
+      box-shadow: 0 2px 0 0 rgba(0,0,0,0.4);
+    }
+
+    /* Touch Controls Overlay */
+    .touch-btn {
+      background: rgba(255, 255, 255, 0.25);
+      backdrop-filter: blur(4px);
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      border-radius: 50%;
+      user-select: none;
+    }
+    .touch-btn:active {
+      background: rgba(255, 255, 255, 0.5);
+      transform: scale(0.95);
+    }
+  </style>
+</head>
+<body class="h-screen w-screen flex flex-col justify-between items-center bg-slate-900 text-white p-2 md:p-4">
+
+  <!-- TOP HEADER / STATS BAR -->
+  <header class="w-full max-w-5xl bg-slate-800/90 border border-slate-700 backdrop-blur rounded-xl p-3 mb-2 flex flex-wrap justify-between items-center shadow-lg gap-2 text-sm md:text-base z-10">
+    <div class="flex items-center space-x-3">
+      <div class="bg-red-600 px-3 py-1 rounded-lg font-bold text-white tracking-wider flex items-center gap-2">
+        <i class="fa-solid font-pixel text-xs">T1</i>
+        <span id="levelDisplay" class="font-pixel text-xs text-yellow-300">TAHAP 1</span>
+      </div>
+      <div class="flex items-center gap-1 bg-slate-900/80 px-3 py-1 rounded-lg border border-slate-700">
+        <span class="text-gray-400 font-semibold text-xs hidden sm:inline">NYAWA:</span>
+        <div id="livesDisplay" class="flex gap-1 text-red-500 text-lg">
+          <i class="fa-solid fa-heart"></i>
+          <i class="fa-solid fa-heart"></i>
+          <i class="fa-solid fa-heart"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex items-center space-x-4">
+      <div class="flex items-center gap-2 bg-slate-900/80 px-3 py-1 rounded-lg border border-slate-700">
+        <i class="fa-solid fa-coins text-yellow-400 text-lg animate-bounce"></i>
+        <span id="coinsDisplay" class="font-pixel text-xs text-yellow-300">0</span>
+      </div>
+      <div class="flex items-center gap-2 bg-slate-900/80 px-3 py-1 rounded-lg border border-slate-700">
+        <i class="fa-solid fa-star text-amber-400 text-lg"></i>
+        <span id="scoreDisplay" class="font-pixel text-xs text-green-400">0</span>
+      </div>
+      <button id="pauseBtn" class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold px-3 py-1 rounded-lg text-xs font-pixel transition">
+        <i class="fa-solid fa-pause"></i>
+      </button>
+      <button id="audioToggleBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded-lg text-xs transition">
+        <i class="fa-solid fa-volume-high"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER (CANVAS + OVERLAYS) -->
+  <main class="relative w-full max-w-5xl flex-1 flex flex-col justify-center items-center overflow-hidden">
+    
+    <!-- CANVAS -->
+    <canvas id="gameCanvas" class="w-full h-full object-contain"></canvas>
+
+    <!-- MENU CONTAINER (OVERLAY) -->
+    <div id="menuOverlay" class="absolute inset-0 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 z-20 text-center">
+      <div class="max-w-md w-full bg-slate-800 border-2 border-amber-500 rounded-2xl p-6 shadow-2xl modal-enter">
+        <div class="mb-4">
+          <div class="inline-block bg-red-600 text-white font-pixel text-xs px-3 py-1 rounded-full mb-2 uppercase tracking-widest animate-pulse">RBT TINGKATAN 2</div>
+          <h1 class="font-fun text-3xl md:text-4xl text-amber-400 drop-shadow-md">SUPER MARIO</h1>
+          <p class="font-pixel text-xs text-blue-300 mt-1">MISI PENYELAMAT DUNIA MEKANIKAL</p>
+        </div>
+
+        <form id="playerForm" class="space-y-3 mb-5 text-left">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">NAMA MURID:</label>
+            <input type="text" id="playerName" required placeholder="Contoh: Ahmad Zaki" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">KELAS:</label>
+            <input type="text" id="playerClass" required placeholder="Contoh: 2 Cemerlang" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500">
+          </div>
+        </form>
+
+        <div class="flex flex-col gap-3">
+          <button id="startBtn" class="btn-retro bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-pixel py-3 rounded-xl text-sm font-bold tracking-wider">
+            <i class="fa-solid fa-play mr-2"></i> MULA PERMAINAN
+          </button>
+          <div class="grid grid-cols-2 gap-2">
+            <button id="instructionsBtn" class="bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold py-2 rounded-xl text-xs flex items-center justify-center gap-1">
+              <i class="fa-solid fa-circle-info"></i> ARAHAN
+            </button>
+            <button id="recordsBtn" class="bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold py-2 rounded-xl text-xs flex items-center justify-center gap-1">
+              <i class="fa-solid fa-trophy"></i> TAHAP & INFO
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL ARAHAN -->
+    <div id="instructionsModal" class="hidden absolute inset-0 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-4 z-30">
+      <div class="max-w-lg w-full bg-slate-800 border border-slate-700 rounded-2xl p-6 text-left modal-enter max-h-[90vh] overflow-y-auto">
+        <h2 class="font-fun text-2xl text-amber-400 mb-4 flex items-center gap-2">
+          <i class="fa-solid fa-gamepad"></i> ARAHAN PERMAINAN
+        </h2>
+        
+        <div class="space-y-3 text-sm text-slate-300">
+          <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700">
+            <h3 class="font-semibold text-emerald-400 mb-1">🎮 Kawalan Pergerakan:</h3>
+            <p>• <strong>Anak Panah Kiri / A:</strong> Bergerak ke kiri</p>
+            <p>• <strong>Anak Panah Kanan / D:</strong> Bergerak ke kanan</p>
+            <p>• <strong>Anak Panah Atas / W / Ruang (Space):</strong> Melompat</p>
+            <p>• <strong>Telefon/Tablet:</strong> Gunakan butang kawalan skrin sentuh.</p>
+          </div>
+
+          <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700">
+            <h3 class="font-semibold text-amber-400 mb-1">🎯 Objektiv & Misi RBT:</h3>
+            <p>• Kumpul syiling emas untuk menambah skor (+5 markah).</p>
+            <p>• Apabila bersentuhan dengan musuh (Goomba, Koopa, Pokok Piranha, Bowser) atau Kotak Soalan (?), soalan RBT Tingkatan 2 akan ditayangkan!</p>
+            <p>• <strong>Jawapan Betul:</strong> Musuh terhapus & mendapat +10 markah.</p>
+            <p>• <strong>Jawapan Salah:</strong> Tolak 1 Nyawa (❤️). Permainan bermula dengan 3 nyawa.</p>
+          </div>
+
+          <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700">
+            <h3 class="font-semibold text-blue-400 mb-1">🏰 3 Tahap Pengembaraan:</h3>
+            <p>1. <strong>Tahap 1 (Dunia Mekanikal):</strong> Soalan asas komponen mekanikal.</p>
+            <p>2. <strong>Tahap 2 (Hutan Gear):</strong> Halangan gear & soalan fungsi komponen.</p>
+            <p>3. <strong>Tahap 3 (Istana Bowser):</strong> Cabaran akhir & soalan penyelesaian masalah.</p>
+          </div>
+        </div>
+
+        <button id="closeInstructionsBtn" class="mt-5 w-full bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 rounded-xl text-sm">
+          TUTUP ARAHAN
+        </button>
+      </div>
+    </div>
+
+    <!-- QUESTION MODAL -->
+    <div id="questionModal" class="hidden absolute inset-0 bg-slate-950/95 backdrop-blur-lg flex items-center justify-center p-4 z-40">
+      <div class="max-w-xl w-full bg-slate-800 border-2 border-amber-500 rounded-2xl p-6 text-left shadow-2xl modal-enter">
+        <div class="flex justify-between items-center mb-3">
+          <span id="questionTag" class="bg-amber-500/20 text-amber-300 text-xs font-bold px-3 py-1 rounded-full border border-amber-500/30">SOALAN RBT MEKANIKAL</span>
+          <span id="questionTimer" class="font-pixel text-xs text-red-400">⏱️ CABARAN</span>
+        </div>
+
+        <h3 id="questionText" class="text-base md:text-lg font-semibold text-white mb-4 leading-relaxed">
+          Soalan akan dipaparkan di sini...
+        </h3>
+
+        <div id="optionsContainer" class="grid grid-cols-1 gap-2.5 mb-4">
+          <!-- Dynamically populated buttons -->
+        </div>
+
+        <!-- Feedback Box -->
+        <div id="feedbackBox" class="hidden p-3 rounded-xl border text-sm font-semibold mb-3">
+          <div id="feedbackTitle" class="font-bold mb-1"></div>
+          <div id="feedbackText" class="text-xs font-normal"></div>
+        </div>
+
+        <button id="nextQuestionBtn" class="hidden w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-sm transition">
+          TERUSKAN PERMAINAN <i class="fa-solid fa-arrow-right ml-1"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- GAME OVER / WIN MODAL -->
+    <div id="gameOverModal" class="hidden absolute inset-0 bg-slate-950/95 backdrop-blur-lg flex items-center justify-center p-4 z-50">
+      <div class="max-w-md w-full bg-slate-800 border-2 border-red-500 rounded-2xl p-6 text-center modal-enter shadow-2xl">
+        <div id="endGameIcon" class="text-6xl mb-2">🎮</div>
+        <h2 id="endGameTitle" class="font-fun text-3xl text-red-500 mb-1">GAME OVER</h2>
+        <p id="endGameSubtitle" class="text-slate-300 text-xs mb-4">Misi gagal! Nyawa anda telah habis.</p>
+
+        <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700 text-left space-y-2 mb-5 text-sm">
+          <div class="flex justify-between">
+            <span class="text-slate-400">Nama Murid:</span>
+            <span id="endPlayerName" class="font-semibold text-white">-</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-400">Jumlah Markah:</span>
+            <span id="endScore" class="font-pixel text-amber-400">0</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-400">Syiling Dikutip:</span>
+            <span id="endCoins" class="font-pixel text-yellow-300">0</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-400">Soalan Betul:</span>
+            <span id="endCorrect" class="text-emerald-400 font-semibold">0</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-400">Soalan Salah:</span>
+            <span id="endWrong" class="text-red-400 font-semibold">0</span>
+          </div>
+          <div class="flex justify-between border-t border-slate-800 pt-2">
+            <span class="text-slate-400">Status Google Sheets:</span>
+            <span id="sheetsStatus" class="text-xs text-amber-400">Belum dihantar</span>
+          </div>
+        </div>
+
+        <div class="flex gap-3">
+          <button id="restartGameBtn" class="flex-1 btn-retro bg-emerald-600 hover:bg-emerald-700 text-white font-pixel py-3 rounded-xl text-xs">
+            <i class="fa-solid fa-rotate-right mr-1"></i> MAIN SEMULA
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOUCH CONTROLS (MOBILE) -->
+    <div id="touchControls" class="absolute bottom-3 left-3 right-3 flex justify-between items-center pointer-events-none z-10 md:hidden">
+      <div class="flex gap-2 pointer-events-auto">
+        <button id="btnLeft" class="touch-btn w-14 h-14 flex items-center justify-center text-white text-xl active:bg-white/40">
+          <i class="fa-solid fa-arrow-left"></i>
+        </button>
+        <button id="btnRight" class="touch-btn w-14 h-14 flex items-center justify-center text-white text-xl active:bg-white/40">
+          <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </div>
+      <div class="pointer-events-auto">
+        <button id="btnJump" class="touch-btn w-16 h-16 bg-amber-500/40 border-amber-300 flex items-center justify-center text-white text-2xl active:bg-amber-500/70">
+          <i class="fa-solid fa-arrow-up"></i>
+        </button>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- FOOTER BANNER -->
+  <footer class="w-full max-w-5xl text-center py-2 text-xs text-slate-400 flex flex-wrap justify-between items-center px-2">
+    <div>RBT Tingkatan 2 • Komponen Mekanikal</div>
+    <div>Sistem Google Sheets Integration Ready</div>
+  </footer>
+
+  <!-- SCRIPT UTAMA -->
+  <script>
+    /* ==========================================================================
+       1. INTEGRASI GOOGLE APPS SCRIPT (URL KONFIGURASI)
+       ========================================================================== */
+    // Gantikan URL di bawah dengan Web App URL anda selepas deploy Code.gs
+    const GOOGLE_SCRIPT_URL = "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE";
+
+    /* ==========================================================================
+       2. DATABASE 30 SOALAN RBT TINGKATAN 2 (TOP IK MEKANIKAL)
+       ========================================================================== */
+    const questionBank = [
+      {
+        q: "Apakah fungsi utama sistem mekanikal dalam sesuatu produk?",
+        options: ["Mengurangkan kos pembuatan produk", "Memindahkan, mengubah atau memegang daya mekanikal", "Menghasilkan tenaga elektrik untuk motor", "Meningkatkan kecantikan luaran reka bentuk"],
+        answer: 1,
+        exp: "Sistem mekanikal berfungsi untuk memindahkan, mengubah, atau memegang daya dan pergerakan dari satu komponen ke komponen lain."
+      },
+      {
+        q: "Komponen mekanikal yang manakah berfungsi sebagai tuas (lever)?",
+        options: ["Galas bebola (Ball bearing)", "Pemotong kuku", "Tali sawat (V-belt)", "Gegancu (Sprocket)"],
+        answer: 1,
+        exp: "Pemotong kuku menggunakan prinsip Tuas (Kelas 3 & Kelas 1) untuk menggandakan daya memotong kuku."
+      },
+      {
+        q: "Tuas Kelas Pertama mempunyai susunan kedudukan komponen yang mana di tengah?",
+        options: ["Beban (Load)", "Fulkrum (Fulcrum)", "Daya (Effort)", "Gear"],
+        answer: 1,
+        exp: "Tuas Kelas Pertama mempunyai Fulkrum di tengah-tengah antara Beban dan Daya (B-F-D)."
+      },
+      {
+        q: "Alatan manakah yang merupakan contoh Tuas Kelas Kedua?",
+        options: ["Gunting kertas", "Kereta sorong (Wheelbarrow)", "Penyepit ais", "Joran pancing"],
+        answer: 1,
+        exp: "Kereta sorong ialah Tuas Kelas Kedua di mana Beban terletak di antara Fulkrum (roda) dan Daya (pemegang)."
+      },
+      {
+        q: "Penyepit ais dan joran pancing mengaplikasikan prinsip tuas kelas berapa?",
+        options: ["Tuas Kelas Pertama", "Tuas Kelas Kedua", "Tuas Kelas Ketiga", "Tuas Majmuk"],
+        answer: 2,
+        exp: "Tuas Kelas Ketiga mempunyai Daya (Effort) di tengah-tengah antara Fulkrum dan Beban."
+      },
+      {
+        q: "Apakah fungsi utama Gear (Gears) dalam reka bentuk mekanikal?",
+        options: ["Memegang aci supaya tidak bergoyang", "Menghubungkan dua gandar keluli", "Tukar kelajuan, arah atau daya putaran", "Menyerap hentakan pada roda"],
+        answer: 2,
+        exp: "Gear berfungsi memindahkan daya serta mengubah kelajuan dan arah putaran bagi sesebuah mesin."
+      },
+      {
+        q: "Apakah jenis gear yang digunakan pada jam tangan mekanikal atau basikal?",
+        options: ["Gear serong (Bevel gear)", "Gear taji (Spur gear)", "Gear rak dan pinang (Rack & pinion)", "Gear cacing (Worm gear)"],
+        answer: 1,
+        exp: "Gear taji (Spur gear) merupakan jenis gear paling asas yang dipasang pada gandar selari seperti jam hand-wound."
+      },
+      {
+        q: "Gear jenis manakah yang digunakan untuk memindahkan gerak putaran kepada gerakan lurus?",
+        options: ["Gear Serong", "Gear Heliks", "Gear Rak dan Pinang (Rack & Pinion)", "Gear Cacing"],
+        answer: 2,
+        exp: "Gear Rak dan Pinang mentransformasikan pergerakan putaran (pinion) kepada pergerakan lurus (rak)."
+      },
+      {
+        q: "Apakah fungsi Takal (Pulleys) dan Tali Sawat (Belts)?",
+        options: ["Menyambungkan pergerakan gandar yang jaraknya berdekatan sahaja", "Memindahkan daya putaran antara dua gandar yang jaraknya agak jauh", "Menghentikan pergerakan putaran dengan cepat", "Menolak beban ke atas secara tegak"],
+        answer: 1,
+        exp: "Takal dan Tali Sawat sesuai memindahkan tenaga putaran bagi dua gandar berjarak jauh seperti dalam enjin kereta atau mesin latih."
+      },
+      {
+        q: "Gegancu (Sprocket) dan Rantai (Chain) biasanya digunakan pada kenderaan manakah?",
+        options: ["Kereta mainan solar", "Basikal dan motosikal", "Kapal terbang", "Jam dinding"],
+        answer: 1,
+        exp: "Rantai dan Gegancu memindahkan daya putaran gandar dari pedal ke roda belakang basikal/motosikal."
+      },
+      {
+        q: "Apakah perbezaan utama antara kombinasi (Takal & Tali Sawat) berbanding (Gegancu & Rantai)?",
+        options: ["Gegancu dan rantai tidak bergelincir semasa pemindahan daya", "Tali sawat diperbuat daripada keluli tahan karat", "Takal hanya bergerak satu arah", "Rantai tidak memerlukan minyak pelincir"],
+        answer: 0,
+        exp: "Gegancu & rantai mengunci pergerakan gigi secara positif tanpa risiko gelinciran berbanding tali sawat."
+      },
+      {
+        q: "Apakah fungsi Galas Bebola (Ball Bearings)?",
+        options: ["Memutarkan gandar secara automatik", "Mengurangkan geseran dan melancarkan pergerakan gandar/roda", "Mengunci pergerakan mekanikal supaya kekal", "Menghubungkan dua rod tegar"],
+        answer: 1,
+        exp: "Galas bebola mengandungi bebola keluli kecil untuk mengurangkan geseran permukaan pergerakan putaran."
+      },
+      {
+        q: "Komponen Pautan (Linkage) berfungsi sebagai:",
+        options: ["Penutup bekas mekanikal", "Penghubung antara komponen untuk memindahkan daya dan arah pergerakan", "Penyerap haba enjin", "Pengumpul tenaga kinetik"],
+        answer: 1,
+        exp: "Pautan (Linkage) mengaitkan beberapa bahagian mekanikal untuk menghasilkan pergerakan serentak (contoh: pengelap cermin kereta)."
+      },
+      {
+        q: "Aci Sesondol (Camshaft) kerap digunakan pada mesin untuk:",
+        options: ["Mengubah gerakan putaran kepada gerakan linear berulang (naik turun / buka katup)", "Memegang roda pada casis", "Melincirkan minyak hitam", "Memutarkan kipas pendingin"],
+        answer: 0,
+        exp: "Sesondol (Cam) mengubah pergerakan putaran sekata kepada gerakan lurus berulang (seperti injap enjin)."
+      },
+      {
+        q: "Komponen Aci Bicu (Crankshaft) berfungsi untuk:",
+        options: ["Menyokong tuas kelas ketiga", "Menukar gerakan linear piston kepada gerakan putaran roda", "Menyambungkan rantai dengan gear", "Menghentikan enjin"],
+        answer: 1,
+        exp: "Aci bicu mentransformasi gerakan lurus turun-naik omboh (piston) kepada pergerakan putaran gandar."
+      },
+      {
+        q: "Penyepit dawai atau pemutar skru menggunakan prinsip mekanikal komponen apa?",
+        options: ["Gelongsor", "Baji dan Tuas", "Pautan fleksibel", "Rantai magnetik"],
+        answer: 1,
+        exp: "Alatan tangan seperti penyepit dawai mengombinasikan prinsip Tuas dan Baji."
+      },
+      {
+        q: "Apakah kegunaan Baji (Wedge) dalam mekanikal?",
+        options: ["Memisah, memotong atau memegang objek di tempatnya", "Menyerap kejutan graviti", "Memutar gandar utama", "Mengikat rantai basikal"],
+        answer: 0,
+        exp: "Baji ialah satah condong ganda dua yang diguna untuk membelah atau memotong (seperti mata kapak atau pisau)."
+      },
+      {
+        q: "Pemutar skru dan skru menggunakan prinsip mekanikal asas:",
+        options: ["Satah Condong (Inclined Plane)", "Tuas Kelas Pertama sahaja", "Rantai & Gegancu", "Galas Bebola"],
+        answer: 0,
+        exp: "Bebenang pada skru merupakan satah condong yang dililit mengelilingi batang silinder."
+      },
+      {
+        q: "Komponen Gelongsor (Sliders) dalam peranti mekanikal berfungsi untuk:",
+        options: ["Memindahkan daya secara membulat", "Mengurangkan tekanan udara", "Memastikan gerakan berada dalam laluan lurus yang ditetapkan", "Memegang gear agar tidak haus"],
+        answer: 2,
+        exp: "Gelongsor memastikan pergerakan mekanikal terpandu secara tepat dalam satu garisan lurus (contoh: laci meja)."
+      },
+      {
+        q: "Pengelap cermin kereta (windshield wiper) merupakan contoh aplikasi komponen mekanikal:",
+        options: ["Galas bebola & Takal", "Pautan (Linkage)", "Gear Serong", "Tali Sawat V"],
+        answer: 1,
+        exp: "Pengelap cermin kereta menggunakan sistem pautan (linkage) untuk menggerakkan dua bilah pengelap secara serentak."
+      },
+      {
+        q: "Apakah jenis gear yang digunakan pada pintu pagar automatik lurus?",
+        options: ["Gear Taji", "Gear Rak dan Pinang (Rack and Pinion)", "Gear Serong", "Gear Heliks"],
+        answer: 1,
+        exp: "Motor memutarkan pinion di atas rantai/rak lurus (rack) untuk menolak pintu pagar secara horizontal."
+      },
+      {
+        q: "Apabila gear pemandu (kecil) memutarkan gear dipandu (besar), apakah yang berlaku kepada kelajuan?",
+        options: ["Kelajuan bertambah, daya berkurang", "Kelajuan berkurang, daya (tork) bertambah", "Kelajuan dan daya kekal sama", "Gear akan terhenti"],
+        answer: 1,
+        exp: "Nisbah gear kecil memutar gear besar mengurangkan kelajuan kelajuan tetapi meningkatkan tork/daya mekanikal."
+      },
+      {
+        q: "Apakah bahan pelincir yang kerap digunakan untuk merawat galas bebola dan gear?",
+        options: ["Air paip", "Gris atau minyak pelincir (Lubricant)", "Cuka kayu", "Alkohol murni"],
+        answer: 1,
+        exp: "Gris/minyak pelincir mengurangkan geseran dan kehausan pada permukaan logam bergerak."
+      },
+      {
+        q: "Dalam alatan pemutar gerudi tangan, apakah jenis gear yang menukar arah putaran 90 darjah?",
+        options: ["Gear Serong (Bevel Gear)", "Gear Taji", "Gear Rak", "Gear Cacing"],
+        answer: 0,
+        exp: "Gear serong (bevel gear) direka khas untuk memindahkan daya antara dua gandar yang bersilang (biasanya 90°)."
+      },
+      {
+        q: "Mesin latih meja (Bench Drill) menggunakan komponen mana untuk pemindahan pergerakan utama?",
+        options: ["Takal dan Tali Sawat", "Rantai dan Gegancu", "Tuas kelas ketiga", "Baji"],
+        answer: 0,
+        exp: "Mesin latih meja menggunakan kombinasi takal bertingkat dan tali sawat untuk mengubah kelajuan gerudi."
+      },
+      {
+        q: "Pintu gari atau kunci mangga mekanikal banyak menggunakan sistem:",
+        options: ["Gear Cacing & Pin", "Tuas dan Spring", "Takal bertingkat", "Tali sawat masin"],
+        answer: 1,
+        exp: "Sistem kunci mekanikal menggunakan pin, spring, dan tuas kecil untuk kawalan keselamatan."
+      },
+      {
+        q: "Apakah nama komponen mekanikal yang terdiri daripada roda berjalur dan tali?",
+        options: ["Gear Taji", "Takal (Pulley)", "Galas Bebola", "Gegancu"],
+        answer: 1,
+        exp: "Takal ialah roda berjalur rim yang dililit tali atau tali sawat bagi mengangkat beban atau memindahkan daya."
+      },
+      {
+        q: "Pemutar pintu pemutar air (Sluice gate) banyak mengaplikasikan:",
+        options: ["Gear Cacing (Worm Gear)", "Tali sawat", "Pautan fleksibel", "Galas bebola seramik"],
+        answer: 0,
+        exp: "Gear cacing mempunyai kelebihan kunci-kendiri (self-locking) yang selamat untuk pintu air berat."
+      },
+      {
+        q: "Sistem mekanikal yang baik mestilah mengutamakan faktor:",
+        options: ["Kekuatan, kecekapan, keselamatan dan ketahanan", "Bentuk yang berat dan mahal", "Penggunaan wayar elektrik yang banyak", "Warna yang berkilat sahaja"],
+        answer: 0,
+        exp: "Reka bentuk mekanikal berkesan menitikberatkan fungsi, kecekapan tenaga, keselamatan pengguna dan ketahanan."
+      },
+      {
+        q: "Mengapakah ujian produk mekanikal perlu dijalankan sebelum dipasarkan?",
+        options: ["Untuk menghabiskan bajet", "Memastikan produk berfungsi secara selamat dan mencapai matlamat reka bentuk", "Meningkatkan berat produk", "Mengelakkan produk daripada dibeli"],
+        answer: 1,
+        exp: "Pengujian membuktikan kecekapan dan keselamatan sistem mekanikal serta mengenalpasti kelemahan untuk ditambah baik."
+      }
+    ];
+
+    /* ==========================================================================
+       3. WEB AUDIO API SYNTHESIZER (SOUND EFFECTS & MUSIC)
+       ========================================================================== */
+    class SoundEngine {
+      constructor() {
+        this.ctx = null;
+        this.muted = false;
+      }
+      init() {
+        if (!this.ctx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          this.ctx = new AudioCtx();
+        }
+        if (this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+      playJump() {
+        if (this.muted || !this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(150, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(400, this.ctx.currentTime + 0.15);
+        gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.15);
+      }
+      playCoin() {
+        if (this.muted || !this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(987.77, this.ctx.currentTime); // B5
+        osc.frequency.setValueAtTime(1318.51, this.ctx.currentTime + 0.08); // E6
+        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.25);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.25);
+      }
+      playCorrect() {
+        if (this.muted || !this.ctx) return;
+        const now = this.ctx.currentTime;
+        const notes = [523.25, 659.25, 783.99, 1046.50]; // C E G C
+        notes.forEach((freq, i) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.value = freq;
+          gain.gain.setValueAtTime(0.2, now + i * 0.08);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.08 + 0.15);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now + i * 0.08);
+          osc.stop(now + i * 0.08 + 0.15);
+        });
+      }
+      playWrong() {
+        if (this.muted || !this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(220, now);
+        osc.frequency.exponentialRampToValueAtTime(110, now + 0.3);
+        gain.gain.setValueAtTime(0.25, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.3);
+      }
+      playWin() {
+        if (this.muted || !this.ctx) return;
+        const now = this.ctx.currentTime;
+        const notes = [400, 500, 600, 800];
+        notes.forEach((f, i) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'square';
+          osc.frequency.value = f;
+          gain.gain.setValueAtTime(0.2, now + i * 0.1);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.1 + 0.2);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now + i * 0.1);
+          osc.stop(now + i * 0.1 + 0.2);
+        });
+      }
+    }
+    const sounds = new SoundEngine();
+
+    /* ==========================================================================
+       4. GAME ENGINE & STATE MANAGEMENT
+       ========================================================================== */
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Canvas sizing setup
+    function resizeCanvas() {
+      const container = canvas.parentElement;
+      canvas.width = container.clientWidth;
+      canvas.height = container.clientHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    // Game States
+    const STATE = {
+      MENU: 0,
+      PLAYING: 1,
+      PAUSED: 2,
+      QUESTION: 3,
+      GAMEOVER: 4,
+      VICTORY: 5
+    };
+
+    let currentState = STATE.MENU;
+    let playerName = "";
+    let playerClass = "";
+
+    // Stats
+    let score = 0;
+    let coins = 0;
+    let lives = 3;
+    let currentLevelIndex = 0;
+    let correctAnswersCount = 0;
+    let wrongAnswersCount = 0;
+    let activeQuestion = null;
+    let currentEnemyCollision = null;
+
+    // Keys State
+    const keys = { left: false, right: false, jump: false };
+
+    // Platform Level Configurations
+    const levelsConfig = [
+      {
+        name: "TAHAP 1: DUNIA MEKANIKAL",
+        bgColor: ["#38bdf8", "#bae6fd"],
+        groundColor: "#15803d",
+        blockColor: "#b45309",
+        gravity: 0.45,
+        speed: 3.5,
+        length: 2400
+      },
+      {
+        name: "TAHAP 2: HUTAN GEAR",
+        bgColor: ["#059669", "#a7f3d0"],
+        groundColor: "#047857",
+        blockColor: "#78350f",
+        gravity: 0.5,
+        speed: 4.0,
+        length: 2800
+      },
+      {
+        name: "TAHAP 3: ISTANA BOWSER",
+        bgColor: ["#450a0a", "#fca5a5"],
+        groundColor: "#1f2937",
+        blockColor: "#991b1b",
+        gravity: 0.55,
+        speed: 4.5,
+        length: 3200
+      }
+    ];
+
+    /* ==========================================================================
+       5. GAME ENTITIES (MARIO, ENEMIES, PLATFORMS, COINS)
+       ========================================================================== */
+    let cameraX = 0;
+
+    // Mario Object
+    const mario = {
+      x: 50,
+      y: 100,
+      width: 32,
+      height: 44,
+      vx: 0,
+      vy: 0,
+      isGrounded: false,
+      facing: 'right',
+      animFrame: 0,
+      reset: function() {
+        this.x = 50;
+        this.y = 100;
+        this.vx = 0;
+        this.vy = 0;
+        this.isGrounded = false;
+      }
+    };
+
+    let platforms = [];
+    let coinsList = [];
+    let enemies = [];
+    let questionBlocks = [];
+    let flagPole = { x: 0, y: 0, width: 20, height: 200 };
+
+    // Generate Level Objects
+    function initLevel(levelIdx) {
+      const config = levelsConfig[levelIdx];
+      cameraX = 0;
+      mario.reset();
+
+      platforms = [];
+      coinsList = [];
+      enemies = [];
+      questionBlocks = [];
+
+      const floorY = canvas.height - 60;
+
+      // Base Floor with gaps
+      let currentX = 0;
+      while (currentX < config.length) {
+        let gap = (currentX > 300 && Math.random() < 0.25) ? 80 : 0;
+        let groundWidth = 250 + Math.random() * 200;
+        if (currentX + groundWidth > config.length - 300) {
+          groundWidth = config.length - currentX;
+          gap = 0;
+        }
+
+        platforms.push({
+          x: currentX,
+          y: floorY,
+          width: groundWidth,
+          height: 60,
+          type: 'ground'
+        });
+
+        // Add Coins & Enemies on platform
+        if (currentX > 200 && groundWidth > 150) {
+          // Coins
+          for (let c = 0; c < 3; c++) {
+            coinsList.push({
+              x: currentX + 40 + c * 30,
+              y: floorY - 60 - (Math.random() > 0.5 ? 40 : 0),
+              radius: 8,
+              collected: false
+            });
+          }
+
+          // Enemy Spawn
+          let enemyType = 'goomba';
+          if (levelIdx === 1) enemyType = Math.random() > 0.5 ? 'goomba' : 'koopa';
+          if (levelIdx === 2) {
+            const r = Math.random();
+            enemyType = r < 0.4 ? 'goomba' : (r < 0.7 ? 'koopa' : 'piranha');
+          }
+
+          enemies.push({
+            x: currentX + groundWidth / 2,
+            y: enemyType === 'piranha' ? floorY - 45 : floorY - 32,
+            width: 32,
+            height: enemyType === 'piranha' ? 45 : 32,
+            type: enemyType,
+            vx: (Math.random() > 0.5 ? 1 : -1) * (1 + levelIdx * 0.5),
+            minX: currentX + 10,
+            maxX: currentX + groundWidth - 40,
+            defeated: false
+          });
+        }
+
+        // Floating Platforms & Question Blocks
+        if (currentX > 400 && currentX < config.length - 400 && Math.random() < 0.6) {
+          const platY = floorY - 100 - Math.random() * 60;
+          platforms.push({
+            x: currentX + 50,
+            y: platY,
+            width: 100,
+            height: 20,
+            type: 'brick'
+          });
+
+          // Question Block
+          questionBlocks.push({
+            x: currentX + 85,
+            y: platY - 40,
+            width: 28,
+            height: 28,
+            used: false
+          });
+        }
+
+        currentX += groundWidth + gap;
+      }
+
+      // Add Final Bowser at Level 3 near end
+      if (levelIdx === 2) {
+        enemies.push({
+          x: config.length - 450,
+          y: floorY - 70,
+          width: 60,
+          height: 70,
+          type: 'bowser',
+          vx: 1.5,
+          minX: config.length - 550,
+          maxX: config.length - 350,
+          defeated: false
+        });
+      }
+
+      // Flag Pole at End
+      flagPole = {
+        x: config.length - 150,
+        y: floorY - 200,
+        width: 20,
+        height: 200
+      };
+    }
+
+    /* ==========================================================================
+       6. DRAWING FUNCTIONS (CANVAS PROCEDURAL GRAPHICS)
+       ========================================================================== */
+    function drawMario() {
+      ctx.save();
+      ctx.translate(mario.x - cameraX, mario.y);
+
+      if (mario.facing === 'left') {
+        ctx.scale(-1, 1);
+        ctx.translate(-mario.width, 0);
+      }
+
+      // Cap/Hat
+      ctx.fillStyle = '#dc2626'; // Red
+      ctx.fillRect(4, 0, 24, 10);
+      ctx.fillRect(8, 10, 20, 4);
+
+      // Face
+      ctx.fillStyle = '#fde047'; // Skin tone
+      ctx.fillRect(8, 10, 16, 12);
+      ctx.fillStyle = '#78350f'; // Eyes/Mustache
+      ctx.fillRect(18, 12, 3, 4);
+      ctx.fillRect(12, 18, 12, 4);
+
+      // Shirt
+      ctx.fillStyle = '#dc2626';
+      ctx.fillRect(6, 22, 20, 10);
+
+      // Overalls
+      ctx.fillStyle = '#2563eb'; // Blue
+      ctx.fillRect(8, 26, 16, 12);
+      ctx.fillStyle = '#facc15'; // Yellow buttons
+      ctx.fillRect(10, 28, 3, 3);
+      ctx.fillRect(19, 28, 3, 3);
+
+      // Shoes
+      ctx.fillStyle = '#451a03';
+      ctx.fillRect(4, 38, 10, 6);
+      ctx.fillRect(18, 38, 10, 6);
+
+      ctx.restore();
+    }
+
+    function drawEnemies() {
+      enemies.forEach(e => {
+        if (e.defeated) return;
+        const drawX = e.x - cameraX;
+
+        ctx.save();
+        ctx.translate(drawX, e.y);
+
+        if (e.type === 'goomba') {
+          // Brown mushroom enemy
+          ctx.fillStyle = '#78350f';
+          ctx.beginPath();
+          ctx.arc(16, 16, 16, Math.PI, 0);
+          ctx.fill();
+          ctx.fillRect(6, 16, 20, 10);
+          // Feet
+          ctx.fillStyle = '#000';
+          ctx.fillRect(2, 24, 10, 8);
+          ctx.fillRect(20, 24, 10, 8);
+          // Eyes
+          ctx.fillStyle = '#fff';
+          ctx.fillRect(8, 10, 4, 8);
+          ctx.fillRect(20, 10, 4, 8);
+          ctx.fillStyle = '#000';
+          ctx.fillRect(10, 12, 2, 4);
+          ctx.fillRect(20, 12, 2, 4);
+        } else if (e.type === 'koopa') {
+          // Green Turtle
+          ctx.fillStyle = '#16a34a';
+          ctx.beginPath();
+          ctx.arc(16, 14, 14, 0, Math.PI * 2);
+          ctx.fill();
+          // Head
+          ctx.fillStyle = '#facc15';
+          ctx.fillRect(20, 2, 10, 10);
+          // Shoes
+          ctx.fillStyle = '#dc2626';
+          ctx.fillRect(4, 24, 8, 8);
+          ctx.fillRect(18, 24, 8, 8);
+        } else if (e.type === 'piranha') {
+          // Pipe & Red Piranha
+          ctx.fillStyle = '#15803d'; // Pipe
+          ctx.fillRect(4, 20, 24, 25);
+          // Plant head
+          ctx.fillStyle = '#dc2626';
+          ctx.beginPath();
+          ctx.arc(16, 10, 12, 0, Math.PI * 2);
+          ctx.fill();
+          // White Spots
+          ctx.fillStyle = '#fff';
+          ctx.fillRect(10, 6, 4, 4);
+          ctx.fillRect(20, 12, 4, 4);
+        } else if (e.type === 'bowser') {
+          // Dragon Bowser
+          ctx.fillStyle = '#15803d';
+          ctx.fillRect(10, 10, 40, 50);
+          // Spikes & Horns
+          ctx.fillStyle = '#facc15';
+          ctx.fillRect(5, 5, 12, 15);
+          ctx.fillRect(40, 5, 12, 15);
+          // Eyes / Mouth
+          ctx.fillStyle = '#dc2626';
+          ctx.fillRect(20, 25, 20, 10);
+        }
+
+        ctx.restore();
+      });
+    }
+
+    function drawPlatforms() {
+      const config = levelsConfig[currentLevelIndex];
+      platforms.forEach(p => {
+        const drawX = p.x - cameraX;
+        if (drawX + p.width < -50 || drawX > canvas.width + 50) return;
+
+        if (p.type === 'ground') {
+          ctx.fillStyle = config.groundColor;
+          ctx.fillRect(drawX, p.y, p.width, p.height);
+          // Top grass line
+          ctx.fillStyle = '#4ade80';
+          ctx.fillRect(drawX, p.y, p.width, 6);
+        } else {
+          // Floating Brick
+          ctx.fillStyle = config.blockColor;
+          ctx.fillRect(drawX, p.y, p.width, p.height);
+          ctx.strokeStyle = '#451a03';
+          ctx.strokeRect(drawX, p.y, p.width, p.height);
+        }
+      });
+    }
+
+    function drawCoinsAndBlocks() {
+      // Coins
+      coinsList.forEach(c => {
+        if (c.collected) return;
+        const drawX = c.x - cameraX;
+        ctx.fillStyle = '#facc15';
+        ctx.beginPath();
+        ctx.arc(drawX, c.y, c.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#ca8a04';
+        ctx.stroke();
+      });
+
+      // Question Blocks
+      questionBlocks.forEach(b => {
+        const drawX = b.x - cameraX;
+        ctx.fillStyle = b.used ? '#64748b' : '#eab308';
+        ctx.fillRect(drawX, b.y, b.width, b.height);
+        ctx.strokeStyle = '#78350f';
+        ctx.strokeRect(drawX, b.y, b.width, b.height);
+
+        // Question mark
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 16px "Press Start 2P"';
+        ctx.fillText(b.used ? '✓' : '?', drawX + 7, b.y + 20);
+      });
+    }
+
+    function drawFlagPole() {
+      const drawX = flagPole.x - cameraX;
+      // Pole
+      ctx.fillStyle = '#cbd5e1';
+      ctx.fillRect(drawX + 8, flagPole.y, 4, flagPole.height);
+      // Top Ball
+      ctx.fillStyle = '#facc15';
+      ctx.beginPath();
+      ctx.arc(drawX + 10, flagPole.y, 10, 0, Math.PI * 2);
+      ctx.fill();
+      // Flag
+      ctx.fillStyle = '#dc2626';
+      ctx.beginPath();
+      ctx.moveTo(drawX + 12, flagPole.y + 10);
+      ctx.lineTo(drawX + 50, flagPole.y + 30);
+      ctx.lineTo(drawX + 12, flagPole.y + 50);
+      ctx.fill();
+    }
+
+    /* ==========================================================================
+       7. GAME LOGIC & UPDATE LOOP
+       ========================================================================== */
+    function updateGame() {
+      if (currentState !== STATE.PLAYING) return;
+
+      const config = levelsConfig[currentLevelIndex];
+
+      // Controls Movement
+      if (keys.left) {
+        mario.vx = -config.speed;
+        mario.facing = 'left';
+      } else if (keys.right) {
+        mario.vx = config.speed;
+        mario.facing = 'right';
+      } else {
+        mario.vx = 0;
+      }
+
+      if (keys.jump && mario.isGrounded) {
+        mario.vy = -11.5;
+        mario.isGrounded = false;
+        sounds.playJump();
+      }
+
+      // Apply Gravity
+      mario.vy += config.gravity;
+
+      // Update position
+      mario.x += mario.vx;
+      mario.y += mario.vy;
+
+      // Prevent going out of left boundary
+      if (mario.x < 0) mario.x = 0;
+
+      // Platform Collision Detection
+      mario.isGrounded = false;
+      platforms.forEach(p => {
+        if (
+          mario.x + mario.width > p.x &&
+          mario.x < p.x + p.width &&
+          mario.y + mario.height >= p.y &&
+          mario.y + mario.height <= p.y + p.height &&
+          mario.vy >= 0
+        ) {
+          mario.y = p.y - mario.height;
+          mario.vy = 0;
+          mario.isGrounded = true;
+        }
+      });
+
+      // Bottom Pit Fall Check
+      if (mario.y > canvas.height + 100) {
+        handlePlayerMistake("Anda telah jatuh ke dalam gaung!");
+      }
+
+      // Camera Follow Mario
+      if (mario.x - cameraX > canvas.width * 0.5) {
+        cameraX = mario.x - canvas.width * 0.5;
+      }
+
+      // Coins Collection
+      coinsList.forEach(c => {
+        if (!c.collected) {
+          const dist = Math.hypot((mario.x + mario.width / 2) - c.x, (mario.y + mario.height / 2) - c.y);
+          if (dist < c.radius + 15) {
+            c.collected = true;
+            coins += 1;
+            score += 5;
+            sounds.playCoin();
+            updateUI();
+          }
+        }
+      });
+
+      // Question Block Hit
+      questionBlocks.forEach(b => {
+        if (!b.used) {
+          if (
+            mario.x + mario.width > b.x &&
+            mario.x < b.x + b.width &&
+            mario.y <= b.y + b.height &&
+            mario.y >= b.y
+          ) {
+            b.used = true;
+            triggerQuestion(null); // Question block trigger
+          }
+        }
+      });
+
+      // Enemy Collision
+      enemies.forEach(e => {
+        if (e.defeated) return;
+
+        // Auto move enemy
+        e.x += e.vx;
+        if (e.x < e.minX || e.x > e.maxX) e.vx *= -1;
+
+        // Check AABB collision
+        if (
+          mario.x + mario.width > e.x &&
+          mario.x < e.x + e.width &&
+          mario.y + mario.height > e.y &&
+          mario.y < e.y + e.height
+        ) {
+          triggerQuestion(e);
+        }
+      });
+
+      // FlagPole Level Finish Check
+      if (mario.x + mario.width >= flagPole.x) {
+        sounds.playWin();
+        if (currentLevelIndex < levelsConfig.length - 1) {
+          currentLevelIndex++;
+          alert(`TAHNIAH! Anda berjaya menyelesaikan ${levelsConfig[currentLevelIndex - 1].name}! Bersedia untuk Tahap Seterusnya!`);
+          initLevel(currentLevelIndex);
+          updateUI();
+        } else {
+          // Game Victory!
+          showEndGame(true);
+        }
+      }
+    }
+
+    /* Render Function */
+    function render() {
+      const config = levelsConfig[currentLevelIndex];
+
+      // Draw Sky Background Gradient
+      const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      grad.addColorStop(0, config.bgColor[0]);
+      grad.addColorStop(1, config.bgColor[1]);
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Draw Level Elements
+      drawPlatforms();
+      drawCoinsAndBlocks();
+      drawFlagPole();
+      drawEnemies();
+      drawMario();
+    }
+
+    // Main Game Loop
+    function gameLoop() {
+      updateGame();
+      render();
+      requestAnimationFrame(gameLoop);
+    }
+
+    /* ==========================================================================
+       8. QUESTION SYSTEM & UI MANAGEMENT
+       ========================================================================== */
+    function triggerQuestion(enemyObj) {
+      currentState = STATE.QUESTION;
+      currentEnemyCollision = enemyObj;
+
+      // Select random unasked question
+      const randomIndex = Math.floor(Math.random() * questionBank.length);
+      activeQuestion = questionBank[randomIndex];
+
+      // Display Modal
+      document.getElementById('questionText').innerText = activeQuestion.q;
+      const optionsContainer = document.getElementById('optionsContainer');
+      optionsContainer.innerHTML = '';
+
+      const optionLabels = ['A', 'B', 'C', 'D'];
+      activeQuestion.options.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = "w-full text-left bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded-xl p-3 text-xs md:text-sm transition flex items-center gap-3";
+        btn.innerHTML = `<span class="bg-amber-500 font-pixel text-slate-900 px-2 py-1 rounded text-xs">${optionLabels[idx]}</span> <span>${opt}</span>`;
+        btn.onclick = () => submitAnswer(idx);
+        optionsContainer.appendChild(btn);
+      });
+
+      // Reset feedback box
+      document.getElementById('feedbackBox').className = "hidden p-3 rounded-xl border text-sm font-semibold mb-3";
+      document.getElementById('nextQuestionBtn').classList.add('hidden');
+      document.getElementById('questionModal').classList.remove('hidden');
+    }
+
+    function submitAnswer(selectedIndex) {
+      const isCorrect = selectedIndex === activeQuestion.answer;
+      const feedbackBox = document.getElementById('feedbackBox');
+      const feedbackTitle = document.getElementById('feedbackTitle');
+      const feedbackText = document.getElementById('feedbackText');
+      const nextBtn = document.getElementById('nextQuestionBtn');
+
+      // Disable all option buttons
+      const buttons = document.querySelectorAll('#optionsContainer button');
+      buttons.forEach(b => b.disabled = true);
+
+      feedbackBox.classList.remove('hidden');
+
+      if (isCorrect) {
+        sounds.playCorrect();
+        score += 10;
+        correctAnswersCount++;
+        if (currentEnemyCollision) currentEnemyCollision.defeated = true;
+
+        feedbackBox.className = "p-3 rounded-xl border border-emerald-500/50 bg-emerald-500/10 text-emerald-300 mb-3";
+        feedbackTitle.innerText = "✅ TAHNIAH! JAWAPAN BETUL (+10 MARKAH)";
+      } else {
+        sounds.playWrong();
+        lives--;
+        wrongAnswersCount++;
+        feedbackBox.className = "p-3 rounded-xl border border-red-500/50 bg-red-500/10 text-red-300 mb-3";
+        feedbackTitle.innerText = "❌ JAWAPAN KURANG TEPAT (-1 NYAWA)";
+      }
+
+      feedbackText.innerText = activeQuestion.exp;
+      updateUI();
+
+      nextBtn.classList.remove('hidden');
+      nextBtn.onclick = () => {
+        document.getElementById('questionModal').classList.add('hidden');
+        if (lives <= 0) {
+          showEndGame(false);
+        } else {
+          currentState = STATE.PLAYING;
+        }
+      };
+    }
+
+    function handlePlayerMistake(reason) {
+      sounds.playWrong();
+      lives--;
+      wrongAnswersCount++;
+      updateUI();
+      alert(reason + " Baki Nyawa: " + lives);
+      if (lives <= 0) {
+        showEndGame(false);
+      } else {
+        mario.reset();
+      }
+    }
+
+    function updateUI() {
+      document.getElementById('scoreDisplay').innerText = score;
+      document.getElementById('coinsDisplay').innerText = coins;
+      document.getElementById('levelDisplay').innerText = levelsConfig[currentLevelIndex].name.split(':')[0];
+
+      // Update Lives Hearts
+      const livesContainer = document.getElementById('livesDisplay');
+      livesContainer.innerHTML = '';
+      for (let i = 0; i < 3; i++) {
+        if (i < lives) {
+          livesContainer.innerHTML += `<i class="fa-solid fa-heart"></i>`;
+        } else {
+          livesContainer.innerHTML += `<i class="fa-regular fa-heart opacity-40"></i>`;
+        }
+      }
+    }
+
+    function showEndGame(isWin) {
+      currentState = isWin ? STATE.VICTORY : STATE.GAMEOVER;
+
+      const modal = document.getElementById('gameOverModal');
+      const title = document.getElementById('endGameTitle');
+      const subtitle = document.getElementById('endGameSubtitle');
+      const icon = document.getElementById('endGameIcon');
+
+      if (isWin) {
+        icon.innerText = "🏆";
+        title.innerText = "MISI BERJAYA!";
+        title.className = "font-fun text-3xl text-amber-400 mb-1";
+        subtitle.innerText = "Tahniah! Anda telah menguasai Komponen Mekanikal RBT!";
+      } else {
+        icon.innerText = "💀";
+        title.innerText = "GAME OVER";
+        title.className = "font-fun text-3xl text-red-500 mb-1";
+        subtitle.innerText = "Nyawa anda telah habis. Cuba lagi!";
+      }
+
+      document.getElementById('endPlayerName').innerText = `${playerName} (${playerClass})`;
+      document.getElementById('endScore').innerText = score;
+      document.getElementById('endCoins').innerText = coins;
+      document.getElementById('endCorrect').innerText = correctAnswersCount;
+      document.getElementById('endWrong').innerText = wrongAnswersCount;
+
+      modal.classList.remove('hidden');
+
+      // Send record to Google Sheets
+      sendDataToGoogleSheets(isWin ? "TAMAT - MENANG" : "GAME OVER");
+    }
+
+    /* ==========================================================================
+       9. GOOGLE APPS SCRIPT INTEGRATION (AJAX DATA TRANSMISSION)
+       ========================================================================== */
+    function sendDataToGoogleSheets(statusMessage) {
+      const statusEl = document.getElementById('sheetsStatus');
+      statusEl.innerText = "Menghantar data...";
+      statusEl.className = "text-xs text-amber-400 animate-pulse";
+
+      if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("YOUR_GOOGLE_APPS_SCRIPT")) {
+        statusEl.innerText = "URL Web App belum dikonfigurasi (Mod Tempatan)";
+        statusEl.className = "text-xs text-slate-400";
+        return;
+      }
+
+      const payload = {
+        name: playerName,
+        playerClass: playerClass,
+        score: score,
+        coins: coins,
+        correct: correctAnswersCount,
+        wrong: wrongAnswersCount,
+        livesRemaining: lives,
+        levelReached: levelsConfig[currentLevelIndex].name,
+        status: statusMessage,
+        timestamp: new Date().toLocaleString('ms-MY')
+      };
+
+      fetch(GOOGLE_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      .then(() => {
+        statusEl.innerText = "Berjaya Dihantar ✓";
+        statusEl.className = "text-xs text-emerald-400 font-bold";
+      })
+      .catch(err => {
+        console.error("Sheets Error:", err);
+        statusEl.innerText = "Gagal Dihantar (Ralat Rangkaian)";
+        statusEl.className = "text-xs text-red-400";
+      });
+    }
+
+    /* ==========================================================================
+       10. EVENT LISTENERS & INITIALIZATION
+       ========================================================================== */
+    // Keyboard Listeners
+    window.addEventListener('keydown', e => {
+      sounds.init();
+      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = true;
+      if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = true;
+      if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === ' ') keys.jump = true;
+    });
+
+    window.addEventListener('keyup', e => {
+      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = false;
+      if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = false;
+      if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === ' ') keys.jump = false;
+    });
+
+    // Mobile Touch Buttons
+    const bindTouch = (btnId, keyProp) => {
+      const btn = document.getElementById(btnId);
+      btn.addEventListener('touchstart', (e) => { e.preventDefault(); sounds.init(); keys[keyProp] = true; });
+      btn.addEventListener('touchend', (e) => { e.preventDefault(); keys[keyProp] = false; });
+      btn.addEventListener('mousedown', () => { sounds.init(); keys[keyProp] = true; });
+      btn.addEventListener('mouseup', () => { keys[keyProp] = false; });
+    };
+    bindTouch('btnLeft', 'left');
+    bindTouch('btnRight', 'right');
+    bindTouch('btnJump', 'jump');
+
+    // UI Buttons
+    document.getElementById('startBtn').addEventListener('click', () => {
+      const nameInput = document.getElementById('playerName').value.trim();
+      const classInput = document.getElementById('playerClass').value.trim();
+
+      if (!nameInput || !classInput) {
+        alert("Sila masukkan Nama Murid dan Kelas sebelum bermula!");
+        return;
+      }
+
+      playerName = nameInput;
+      playerClass = classInput;
+      sounds.init();
+
+      // Reset Game Variables
+      score = 0;
+      coins = 0;
+      lives = 3;
+      currentLevelIndex = 0;
+      correctAnswersCount = 0;
+      wrongAnswersCount = 0;
+
+      document.getElementById('menuOverlay').classList.add('hidden');
+      initLevel(0);
+      updateUI();
+      currentState = STATE.PLAYING;
+    });
+
+    document.getElementById('instructionsBtn').addEventListener('click', () => {
+      document.getElementById('instructionsModal').classList.remove('hidden');
+    });
+
+    document.getElementById('closeInstructionsBtn').addEventListener('click', () => {
+      document.getElementById('instructionsModal').classList.add('hidden');
+    });
+
+    document.getElementById('recordsBtn').addEventListener('click', () => {
+      alert("Maklumat Tahap:\n1. Dunia Mekanikal (Asas Tuas & Gear)\n2. Hutan Gear (Fungsi Komponen & Pautan)\n3. Istana Bowser (Penyelesaian Masalah & Pengiraan)");
+    });
+
+    document.getElementById('restartGameBtn').addEventListener('click', () => {
+      document.getElementById('gameOverModal').classList.add('hidden');
+      score = 0;
+      coins = 0;
+      lives = 3;
+      currentLevelIndex = 0;
+      correctAnswersCount = 0;
+      wrongAnswersCount = 0;
+
+      initLevel(0);
+      updateUI();
+      currentState = STATE.PLAYING;
+    });
+
+    document.getElementById('pauseBtn').addEventListener('click', () => {
+      if (currentState === STATE.PLAYING) {
+        currentState = STATE.PAUSED;
+        document.getElementById('pauseBtn').innerHTML = `<i class="fa-solid fa-play"></i>`;
+      } else if (currentState === STATE.PAUSED) {
+        currentState = STATE.PLAYING;
+        document.getElementById('pauseBtn').innerHTML = `<i class="fa-solid fa-pause"></i>`;
+      }
+    });
+
+    document.getElementById('audioToggleBtn').addEventListener('click', () => {
+      sounds.muted = !sounds.muted;
+      const btn = document.getElementById('audioToggleBtn');
+      btn.innerHTML = sounds.muted ? `<i class="fa-solid fa-volume-xmark"></i>` : `<i class="fa-solid fa-volume-high"></i>`;
+    });
+
+    // Start Animation Loop on Window Load
+    window.onload = function() {
+      resizeCanvas();
+      gameLoop();
+    };
+  </script>
+</body>
+</html>
